@@ -58,10 +58,15 @@ string AI(char rr,char rw){
     static int position = -1;
     // Used to keep track of how many of each color there is
     static int colorCount[10] = {};
+    // Keeps track of what is known
     static int answer[4] = {-1, -1, -1, -1};
+    // Keeps track of what number is not in the code to use for testing positions
     static int wrong = -1;
+    // Keep track of how many were last in the correct position
     static int lastrr = 0;
+    // Used to see if it found all the colors in the code
     static int found = 0;
+    
     string sGuess="0000";
     switch(state) {
         case 0:
@@ -89,21 +94,40 @@ string AI(char rr,char rw){
         break;
 
         case 1:
-        if(position != -1) {
-            if(rr > lastrr) {
-                answer[position] = color;
-                lastrr = rr;
-                colorCount[color]--;
+        {
+            if(position != -1) {
+                if(rr > lastrr) {
+                    answer[position] = color;
+                    lastrr = rr;
+                    colorCount[color]--;
+                }
             }
-        }
-        if(position >= 3 || colorCount[color] <= 0) {
-            position = -1;
-            color++;
-            while(color <= 9 && colorCount[color] == 0) {
+
+            int slots_left = 0;
+            for(int i = position + 1; i < 4; i++) {
+                if(answer[i] == -1) slots_left++;
+            }
+            
+            // If the remaining empty slots perfectly match our remaining color count, auto-fill!
+            if(slots_left == colorCount[color]) {
+                for(int i = position + 1; i < 4; i++) {
+                    if(answer[i] == -1) {
+                        answer[i] = color;
+                        lastrr++; // Increment because we are placing a correct color
+                    }
+                }
+                colorCount[color] = 0;
+            }
+
+            if(position >= 3 || colorCount[color] <= 0) {
+                position = -1;
                 color++;
-            }
-            if(color > 9) {
-                state++;
+                while(color <= 9 && colorCount[color] == 0) {
+                    color++;
+                }
+                if(color > 9) {
+                    state++;
+                }
             }
         }
         break; 
