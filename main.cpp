@@ -60,14 +60,26 @@ string AI(char rr,char rw){
     static int colorCount[10] = {};
     static int answer[4] = {-1, -1, -1, -1};
     static int wrong = -1;
+    static int lastrr = 0;
+    static int found = 0;
     string sGuess="0000";
     switch(state) {
         case 0:
-        if(color != -1) colorCount[color] = rr + rw;
+        if(color != -1) {
+            colorCount[color] = rr + rw;
+            found += rr + rw;
+        }
         if(rr+rw == 0) {
             wrong = color;
         }
-        if(color >= 9) {
+        if(color >= 8 || found == 4) {
+            if(found != 4) {
+                colorCount[color+1] = 4 - found;
+            }
+            if(wrong == -1) {
+                wrong = color + 1;
+            }
+            found = 4;
             state++;
             color = 0;
             while(color <= 9 && colorCount[color] == 0) {
@@ -78,11 +90,13 @@ string AI(char rr,char rw){
 
         case 1:
         if(position != -1) {
-            if(rr >= 1) {
+            if(rr > lastrr) {
                 answer[position] = color;
+                lastrr = rr;
+                colorCount[color]--;
             }
         }
-        if(position == 3) {
+        if(position >= 3 || colorCount[color] <= 0) {
             position = -1;
             color++;
             while(color <= 9 && colorCount[color] == 0) {
@@ -104,12 +118,18 @@ string AI(char rr,char rw){
         break;
 
         case 1:
-        position++;
+        do {
+            position++;
+        } while(answer[position] != -1);
         for(int i = 0; i < 4; i++) {
             if(i == position) {
                 sGuess[i] = color + '0';
             } else{
-                sGuess[i] = wrong + '0';
+                if (answer[i] == -1) {
+                    sGuess[i] = wrong + '0';
+                } else {
+                    sGuess[i] = answer[i] + '0';
+                }
             }
         }
 
