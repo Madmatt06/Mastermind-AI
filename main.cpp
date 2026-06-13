@@ -66,27 +66,33 @@ string AI(char rr,char rw){
     static int lastrr = 0;
     // Used to see if it found all the colors in the code
     static int found = 0;
-    
+
     string sGuess="0000";
+    // This first switch is largley used to handle information about the previous guess
     switch(state) {
         case 0:
+        // The first time the function runs the color will be out of bounds
         if(color != -1) {
             colorCount[color] = rr + rw;
             found += rr + rw;
         }
-        if(rr+rw == 0) {
-            wrong = color;
-        }
+
+        if(rr+rw == 0) wrong = color;
+        
+        // This runs if we are done with colors
         if(color >= 8 || found == 4) {
-            if(found != 4) {
-                colorCount[color+1] = 4 - found;
-            }
-            if(wrong == -1) {
-                wrong = color + 1;
-            }
+            // Shortcut to reduce guesses (last color will be remaining not found)
+            if(found != 4) colorCount[color+1] = 4 - found;
             found = 4;
+
+            // If a unused color was not found the next one is assumed to not be used
+            if(wrong == -1) wrong = color + 1;
+            
+            // Resets and moves on to the next state
             state++;
             color = 0;
+
+            // Skips colors that don't have any found
             while(color <= 9 && colorCount[color] == 0) {
                 color++;
             }
@@ -96,6 +102,7 @@ string AI(char rr,char rw){
         case 1:
         {
             if(position != -1) {
+                // if rr increased, a correct position was found
                 if(rr > lastrr) {
                     answer[position] = color;
                     lastrr = rr;
@@ -103,28 +110,33 @@ string AI(char rr,char rw){
                 }
             }
 
-            int slots_left = 0;
+            int remains = 0;
             for(int i = position + 1; i < 4; i++) {
-                if(answer[i] == -1) slots_left++;
+                if(answer[i] == -1) remains++;
             }
             
-            // If the remaining empty slots perfectly match our remaining color count, auto-fill!
-            if(slots_left == colorCount[color]) {
+            // If the color count matches the remaining, fill all of them
+            if(remains == colorCount[color]) {
                 for(int i = position + 1; i < 4; i++) {
                     if(answer[i] == -1) {
                         answer[i] = color;
-                        lastrr++; // Increment because we are placing a correct color
+                        lastrr++;
                     }
                 }
                 colorCount[color] = 0;
             }
 
+            // Resets the position and moves to next color if done with current color
             if(position >= 3 || colorCount[color] <= 0) {
                 position = -1;
                 color++;
+
+                // Searches for next color that exists in code
                 while(color <= 9 && colorCount[color] == 0) {
                     color++;
                 }
+
+                // Moves to next state when done
                 if(color > 9) {
                     state++;
                 }
@@ -135,16 +147,22 @@ string AI(char rr,char rw){
         break;
 
     }
+
+    // This switch statement makes the next guesses
     switch(state) {
+        // Checks how many of each color exists
         case 0:
         color++;
         for(int i = 0; i < 4; i++) sGuess[i] = color + '0';
         break;
 
         case 1:
+        // Searches for a position which hasn't been figured out yet
         do {
             position++;
         } while(answer[position] != -1);
+
+        // Fills in the knowns, guess, and unknown
         for(int i = 0; i < 4; i++) {
             if(i == position) {
                 sGuess[i] = color + '0';
@@ -160,6 +178,7 @@ string AI(char rr,char rw){
         break;
 
         case 2:
+        // Returns final guess
         for(int i = 0; i < 4; i++) {
             sGuess[i] = answer[i] + '0';
         }
